@@ -21,6 +21,11 @@ search recipes at : wnr/index.php
 
 
 ## Demo
+  user
 
-Insert gif or link to demo
+    username : admin@admin
+    password : 123456
 
+  URL
+
+    https://intranet.pea.co.th/sites/gad4/Public/wnr/index.php
