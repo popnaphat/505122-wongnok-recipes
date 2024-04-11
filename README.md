@@ -15,10 +15,6 @@ Install Step:
     $username = "your username";
     $password = "your password";
     $database = "your database name";
-
-
-Demo: XXXX
-
 ## Used
 
 search recipes at : wnr/index.php
