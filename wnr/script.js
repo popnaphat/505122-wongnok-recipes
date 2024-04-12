@@ -113,8 +113,10 @@ function submitNewRecipe(event) {
         console.error('Error submitting new recipe:', error);
     });
 }
+let myRecipesStatus;
 function myRecipes(username) {
     var recipeResults = document.getElementById('recipeResults');
+    myRecipesStatus = true;
     // Clear previous results
     recipeResults.innerHTML = '';
     // Assuming you have a PHP script called search_recipes.php that handles the backend logic
@@ -557,7 +559,13 @@ function submitEditedRecipe(recipeId, event) {
             console.log(data); // Log the response from the server
             // Perform actions based on the response, if needed
             $('#editRecipeModal').modal('hide');
+            if(myRecipesStatus){
+                alert('สูตรอาหารได้รับการอัพเดต');
+                clearSearch();
+                myRecipesStatus = false;
+            }else{
             searchRecipes();
+            }
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
