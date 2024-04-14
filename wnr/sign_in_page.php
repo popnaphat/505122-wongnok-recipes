@@ -83,9 +83,9 @@ body {
     ?>
 </main>
 
-    <script src="script.js"></script>
+    <script src="./js/script.js"></script>
     <script src="./js/jquery-3.2.1.slim.min.js" ></script>
-    <script src="./js/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+    <script src="./js/popper.min.js"></script>
     <script src="./js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
