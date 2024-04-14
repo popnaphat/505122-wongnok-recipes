@@ -463,9 +463,13 @@ function appendSearchRecipesResult() {
 }
 window.addEventListener('scroll', function() {
     if (isScrolledToPercent(95) && !appendBreaker && !myRecipesStatus) {
-        appendCounter++;
-        console.log(appendCounter);
-        appendSearchRecipesResult();
+        appendBreaker = true; // Set appendBreaker to true to prevent immediate execution
+        setTimeout(function() {
+            appendCounter++;
+            console.log(appendCounter);
+            appendSearchRecipesResult();
+            appendBreaker = false; // Reset appendBreaker after the delay
+        }, 1000); // Add a delay of 1000 milliseconds (1 second)
     }
 });
 
