@@ -113,10 +113,28 @@ function submitNewRecipe(event) {
         console.error('Error submitting new recipe:', error);
     });
 }
+// Define a function to check if the user has scrolled to 80% of the page
+function isScrolledToPercent(percent) {
+    var scrollPosition = window.scrollY;
+    var documentHeight = document.documentElement.scrollHeight;
+    var viewportHeight = window.innerHeight;
+    scrollPercentage = (scrollPosition / (documentHeight - viewportHeight)) * 100;
+    return scrollPercentage >= percent;
+}
 let myRecipesStatus;
+// Add a scroll event listener to the window
+let appendCounter;
+let appendBreaker
+function clearSearch(){
+    document.getElementById('searchInput').value = '';
+    document.getElementById('recipeResults').innerHTML = '';
+}
 function myRecipes(username) {
+    document.getElementById('searchInput').value = '';
     var recipeResults = document.getElementById('recipeResults');
     myRecipesStatus = true;
+    appendCounter = 1;
+    appendBreaker = false;
     // Clear previous results
     recipeResults.innerHTML = '';
     // Assuming you have a PHP script called search_recipes.php that handles the backend logic
@@ -125,7 +143,7 @@ function myRecipes(username) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'query=' + encodeURIComponent(username)
+        body: 'query=' + encodeURIComponent(username) + '&appendCounter=' + appendCounter 
     })
         .then(response => response.json())
         .then(data => {
@@ -223,7 +241,9 @@ function myRecipes(username) {
 function searchRecipes() {
     var searchInput = document.getElementById('searchInput').value.trim();
     var recipeResults = document.getElementById('recipeResults');
-
+    appendCounter = 1;
+    appendBreaker = false;
+    myRecipesStatus = false;
     // Regular expression to check for null, %, or any potential SQL injection
     var invalidCharsRegex = /['";%]/;
 
@@ -232,9 +252,10 @@ function searchRecipes() {
         recipeResults.innerHTML = '<p>Please enter a valid search query</p>';
         return;
     }
+    
     // Clear previous results
     recipeResults.innerHTML = '';
-
+    
     // Perform AJAX request to fetch recipes based on search input
     // Assuming you have a PHP script called search_recipes.php that handles the backend logic
     fetch('./api/search_recipes.php', {
@@ -242,10 +263,11 @@ function searchRecipes() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'query=' + encodeURIComponent(searchInput)
+        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter
     })
         .then(response => response.json())
         .then(data => {
+            //console.log(data.length)
             if (data.length === 0) {
                 // Display a message when there are no results
                 recipeResults.innerHTML = "<div class='alert alert-warning text-center' role='alert'><b>NO DATA!</b></div>";
@@ -337,10 +359,116 @@ function searchRecipes() {
              console.error('Error fetching recipes:', error);
          });
 }
-function clearSearch(){
-    document.getElementById('searchInput').value = '';
-    document.getElementById('recipeResults').innerHTML = '';
+function appendSearchRecipesResult() {
+    var searchInput = document.getElementById('searchInput').value.trim();
+    var recipeResults = document.getElementById('recipeResults');
+    fetch('./api/search_recipes.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter 
+    })
+        .then(response => response.json())
+        .then(data => {
+            
+            if (data.length === 0) {
+                appendBreaker = true;
+            }
+            //Loop through each recipe returned by the backend
+            data.forEach(recipe => {
+                // Create HTML elements to display each recipe
+                var recipeElement = document.createElement('div');
+                recipeElement.classList.add('card', 'mb-3');
+                if(!recipe.member){
+                    recipeElement.innerHTML = `
+                    <div class="row no-gutters">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <img src="${recipe.image_path}" class="card-img" alt="${recipe.title}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }
+                else{
+                    if(recipe.matching){
+                recipeElement.innerHTML = `
+                    <div class="row no-gutters">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <img src="${recipe.image_path}" class="card-img" alt="${recipe.title}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
+                                    <button type="button" class="btn btn-primary" onclick="editRecipe('${recipe.id}')">Edit</button>
+                                    <button type="button" class="btn btn-danger" onclick="deleteRecipe('${recipe.id}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;}else{
+                    if(!recipe.rating){
+                    recipeElement.innerHTML = `
+                    <div class="row no-gutters">
+                        <div class="col-md-4 d-flex align-items-center">
+                            <img src="${recipe.image_path}" class="card-img" alt="${recipe.title}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
+                                    <button type="button" class="btn btn-warning" onclick="rateRecipe('${recipe.id}')">Rate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }else{
+                recipeElement.innerHTML = `
+                <div class="row no-gutters">
+                    <div class="col-md-4 d-flex align-items-center">
+                        <img src="${recipe.image_path}" class="card-img" alt="${recipe.title}">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
+                                <button type="button" class="btn btn-warning">Your gave ${recipe.rating} Points</button>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+            `;
+                }
+                }
+            }
+                // Append the recipe element to the results container
+                recipeResults.appendChild(recipeElement); 
+            });
+        })
+         .catch(error => {
+             console.error('Error fetching recipes:', error);
+         });
 }
+window.addEventListener('scroll', function() {
+    if (isScrolledToPercent(95) && !appendBreaker && !myRecipesStatus) {
+        appendCounter++;
+        console.log(appendCounter);
+        appendSearchRecipesResult();
+    }
+});
+
 function viewRecipe(recipeId) {
     // Perform AJAX request to fetch details of the recipe based on its ID
     fetch('./api/get_recipe_details.php', {
