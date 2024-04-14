@@ -2,7 +2,10 @@
 include '../utils/conn.php';
 session_start();
 if (isset($_POST['query'])) {
-
+// Define variables for pagination
+$page = $_POST['appendCounter'];
+$pageSize = 4;
+$startFrom = ($page - 1) * $pageSize;
 $query = trim($_POST['query']); // Trim any leading/trailing whitespace
 if(isset($_SESSION['email'])){
     $session = $_SESSION['email'];}
@@ -12,18 +15,18 @@ if(isset($_SESSION['email'])){
 // Prepare the SQL statement with a placeholder for the query
 if($session == $query){
 $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
-ON aa.id = bb.recipe_id WHERE created_by = ? ORDER BY avg_rating DESC";
-$param = $query;
+ON aa.id = bb.recipe_id WHERE created_by = ? ORDER BY avg_rating DESC LIMIT ?, ?";
+$param = $session;
 }else{
 $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
-ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC";
+ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC LIMIT ?, ?";
 $param = '%' . $query . '%';
 }
 $stmt = $conn->prepare($sql);
 
 
 // Bind the parameter (query) to the prepared statement
-$stmt->bind_param("s", $param);
+$stmt->bind_param("sii", $param, $startFrom, $pageSize);
 
 $stmt->execute();
 
