@@ -15,18 +15,19 @@ if(isset($_SESSION['email'])){
 // Prepare the SQL statement with a placeholder for the query
 if($session == $query){
 $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
-ON aa.id = bb.recipe_id WHERE created_by = ? ORDER BY avg_rating DESC LIMIT ?, ?";
+ON aa.id = bb.recipe_id WHERE created_by = ? ORDER BY avg_rating DESC";
 $param = $session;
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $param);
+
 }else{
 $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
 ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC LIMIT ?, ?";
 $param = '%' . $query . '%';
-}
 $stmt = $conn->prepare($sql);
-
-
-// Bind the parameter (query) to the prepared statement
 $stmt->bind_param("sii", $param, $startFrom, $pageSize);
+}
+
 
 $stmt->execute();
 
