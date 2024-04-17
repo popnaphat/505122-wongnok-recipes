@@ -121,13 +121,29 @@ function isScrolledToPercent(percent) {
     scrollPercentage = (scrollPosition / (documentHeight - viewportHeight)) * 100;
     return scrollPercentage >= percent;
 }
+function formatDate(date) {
+    const monthsThai = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม",
+        "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน",
+        "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+
+    const day = date.getDate();
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear() + 543; // Convert to Buddhist calendar
+
+    return day + ' ' + monthsThai[monthIndex] + ' ' + year;
+}
 let myRecipesStatus;
 // Add a scroll event listener to the window
 let appendCounter;
-let appendBreaker
+let appendBreaker;
+let sortBy;
 function clearSearch(){
     document.getElementById('searchInput').value = '';
     document.getElementById('recipeResults').innerHTML = '';
+    sortBy = undefined;
 }
 function myRecipes(username) {
     document.getElementById('searchInput').value = '';
@@ -244,6 +260,7 @@ function searchRecipes() {
     appendCounter = 1;
     appendBreaker = false;
     myRecipesStatus = false;
+    //console.log(sortBy)
     // Regular expression to check for null, %, or any potential SQL injection
     var invalidCharsRegex = /['";%]/;
 
@@ -263,7 +280,7 @@ function searchRecipes() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter
+        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter + '&sortBy=' + sortBy
     })
         .then(response => response.json())
         .then(data => {
@@ -273,8 +290,30 @@ function searchRecipes() {
                 recipeResults.innerHTML = "<div class='alert alert-warning text-center' role='alert'><b>NO DATA!</b></div>";
                 return;
             }
+            if(sortBy === 'popular' || typeof sortBy === 'undefined'){
+            recipeResults.innerHTML = `
+                    <div class="input-group mb-3">
+                        <div class="input-group-text" id="btnGroupAddon">เรียงตาม</div>                    
+                            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" value="popular" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="btnradio1">สูตรยอดนิยม</label>
+                            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" value="latest" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="btnradio2">สูตรล่าสุด</label>
+                    </div>
+                `;
+            }else if(sortBy === 'latest'){
+            recipeResults.innerHTML = `
+                <div class="input-group mb-3">
+                    <div class="input-group-text" id="btnGroupAddon">เรียงตาม</div>                    
+                        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" value="popular" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="btnradio1">สูตรยอดนิยม</label>
+                        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" value="latest" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="btnradio2">สูตรล่าสุด</label>
+                </div>
+            `; 
+            }
             //Loop through each recipe returned by the backend
             data.forEach(recipe => {
+                var datecreate = formatDate(new Date(recipe.created_at));
                 // Create HTML elements to display each recipe
                 var recipeElement = document.createElement('div');
                 recipeElement.classList.add('card', 'mb-3');
@@ -287,6 +326,8 @@ function searchRecipes() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                 </div>
@@ -305,6 +346,8 @@ function searchRecipes() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                     <button type="button" class="btn btn-primary" onclick="editRecipe('${recipe.id}')">Edit</button>
@@ -323,6 +366,8 @@ function searchRecipes() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                     <button type="button" class="btn btn-warning" onclick="rateRecipe('${recipe.id}')">Rate</button>
@@ -340,6 +385,8 @@ function searchRecipes() {
                     <div class="col-md-8">
                         <div class="card-body">
                             <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                            <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                            <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                             <div class="btn-group" role="group">
                                 <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                 <button type="button" class="btn btn-warning">Your gave ${recipe.rating} Points</button>
@@ -352,13 +399,24 @@ function searchRecipes() {
                 }
             }
                 // Append the recipe element to the results container
-                recipeResults.appendChild(recipeElement); 
+                recipeResults.appendChild(recipeElement);                         
             });
+            // Selecting the radio buttons
+            const radioButtons = document.querySelectorAll('input[name="btnradio"]');
+            radioButtons.forEach(button => {
+                button.addEventListener('change', function() {
+                    if (this.checked) {
+                        sortBy = this.value;
+                        //console.log(sortBy);
+                        searchRecipes();
+                    }
+                });
+            });  
         })
          .catch(error => {
              console.error('Error fetching recipes:', error);
          });
-}
+}                         
 function appendSearchRecipesResult() {
     var searchInput = document.getElementById('searchInput').value.trim();
     var recipeResults = document.getElementById('recipeResults');
@@ -367,7 +425,7 @@ function appendSearchRecipesResult() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter 
+        body: 'query=' + encodeURIComponent(searchInput) + '&appendCounter=' + appendCounter + '&sortBy=' + sortBy
     })
         .then(response => response.json())
         .then(data => {
@@ -377,6 +435,7 @@ function appendSearchRecipesResult() {
             }
             //Loop through each recipe returned by the backend
             data.forEach(recipe => {
+                var datecreate = formatDate(new Date(recipe.created_at));
                 // Create HTML elements to display each recipe
                 var recipeElement = document.createElement('div');
                 recipeElement.classList.add('card', 'mb-3');
@@ -389,6 +448,8 @@ function appendSearchRecipesResult() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                 </div>
@@ -407,6 +468,8 @@ function appendSearchRecipesResult() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                     <button type="button" class="btn btn-primary" onclick="editRecipe('${recipe.id}')">Edit</button>
@@ -425,6 +488,8 @@ function appendSearchRecipesResult() {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                                <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                                <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                     <button type="button" class="btn btn-warning" onclick="rateRecipe('${recipe.id}')">Rate</button>
@@ -442,6 +507,8 @@ function appendSearchRecipesResult() {
                     <div class="col-md-8">
                         <div class="card-body">
                             <h5 class="card-title">${recipe.title} <span class="badge text-bg-warning">rating : ${recipe.avg_rating}</span></h5>
+                            <p class="card-text">สร้างโดย ${recipe.created_by}</p>
+                            <p class="card-text">สร้างเมื่อ ${datecreate}</p>
                             <div class="btn-group" role="group">
                                 <button type="button" class="btn btn-dark" onclick="viewRecipe('${recipe.id}')">View</button>
                                 <button type="button" class="btn btn-warning">Your gave ${recipe.rating} Points</button>
@@ -466,13 +533,12 @@ window.addEventListener('scroll', function() {
         appendBreaker = true; // Set appendBreaker to true to prevent immediate execution
         setTimeout(function() {
             appendCounter++;
-            console.log(appendCounter);
+            //console.log(appendCounter);
             appendSearchRecipesResult();
             appendBreaker = false; // Reset appendBreaker after the delay
         }, 1000); // Add a delay of 1000 milliseconds (1 second)
     }
-});
-
+});  
 function viewRecipe(recipeId) {
     // Perform AJAX request to fetch details of the recipe based on its ID
     fetch('./api/get_recipe_details.php', {
