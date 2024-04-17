@@ -20,7 +20,7 @@ session_start();
         <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2 active" aria-current="page">Home</a></li>
       </ul>
       <ul class="nav">
-        <?php if(isset($_SESSION['email'])) {echo "<li class='nav-item'><a class='btn btn-light me-2' onclick=\"myRecipes('".$_SESSION['email']."')\">Welcome ".$_SESSION['email']."</a></li> <li class='nav-item'><a class='btn btn-success me-2' onclick='showNewRecipeForm()'>Add Recipe</a></li> <li class='nav-item'><a href='sign_out_page.php' class='btn btn-danger'>Sign Out</a></li>";}
+        <?php if(isset($_SESSION['email'])) {echo "<li class='nav-item'><a class='btn btn-light me-2' onclick=\"myRecipes('".$_SESSION['email']."')\">View ".$_SESSION['email']." recipes</a></li> <li class='nav-item'><a class='btn btn-success me-2' onclick='showNewRecipeForm()'>Add Recipe</a></li> <li class='nav-item'><a href='sign_out_page.php' class='btn btn-danger'>Sign Out</a></li>";}
         else{echo "<li class='nav-item'><a href='sign_in_page.php' class='btn btn-light text-dark me-2'>Sign In</a></li>
         <li class='nav-item'><a href='sign_up_page.php' class='btn btn-primary'>Sign-up</a></li>";}   ?>        
       </ul>
