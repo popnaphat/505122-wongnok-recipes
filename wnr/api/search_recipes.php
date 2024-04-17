@@ -21,13 +21,26 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $param);
 
 }else{
-$sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
-ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC LIMIT ?, ?";
-$param = '%' . $query . '%';
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sii", $param, $startFrom, $pageSize);
+    if(isset($_POST['sortBy'])){
+        if($_POST['sortBy'] == 'popular' || $_POST['sortBy'] == 'undefined'){
+            $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC LIMIT ?, ?";
+            $param = '%' . $query . '%';
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sii", $param, $startFrom, $pageSize);
+        }else{
+            $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY created_at DESC LIMIT ?, ?";
+            $param = '%' . $query . '%';
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sii", $param, $startFrom, $pageSize);
+        }
+    }else{
+        $sql = "SELECT * FROM (SELECT * FROM recipes) as aa LEFT JOIN (SELECT recipe_id , avg(score) as avg_rating FROM recipes_rating GROUP BY recipe_id) as bb
+        ON aa.id = bb.recipe_id WHERE title LIKE ? ORDER BY avg_rating DESC LIMIT ?, ?";
+        $param = '%' . $query . '%';
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sii", $param, $startFrom, $pageSize);
+    }
 }
-
 
 $stmt->execute();
 
